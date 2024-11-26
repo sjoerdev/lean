@@ -278,7 +278,7 @@ public static class Drawing
             position.X, position.Y
         ];
 
-        DrawPrimitive(vertices, 4, PrimitiveType.Lines);
+        DrawPrimitive(vertices, 8, PrimitiveType.Lines);
     }
 
     public static void DrawRectangleFilled(Vector2 position, Vector2 size)
