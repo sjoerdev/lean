@@ -39,7 +39,7 @@ public static class Window
     public static bool Fullscreen
     {
         get => window.WindowState == WindowState.Fullscreen;
-        set => window.WindowState = WindowState.Normal;
+        set => window.WindowState = value ? WindowState.Fullscreen : WindowState.Normal;
     }
 
     public static void Create(int width, int height, string title)
@@ -158,6 +158,8 @@ public static class Drawing
     // use accesable drawing calls
     public static void SetColor(Color color) => currentColor = color;
     public static Color GetColor() => currentColor;
+
+    public static void ClearWindow() => opengl.ClearColor(currentColor);
 
     public static void DrawLine(Vector2 start, Vector2 end){}
 
