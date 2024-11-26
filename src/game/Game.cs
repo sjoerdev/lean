@@ -1,4 +1,6 @@
 using System;
+using System.Drawing;
+using System.Numerics;
 using Engine;
 
 class Game
@@ -22,6 +24,12 @@ class Game
 
     static void OnRender(float deltaTime)
     {
-        // draw stuff here
+        Drawing.SetColor(Color.CornflowerBlue);
+        Drawing.ClearWindow();
+
+        Drawing.SetColor(Color.Red);
+        Drawing.DrawCircle(Vector2.Zero, 64, 32);
+
+        Window.SwapBuffers();
     }
 }
