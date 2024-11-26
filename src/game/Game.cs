@@ -28,13 +28,7 @@ class Game
 
         Drawing.SetColor(Color.Red);
 
-        int segments = 8;
-
-        Drawing.DrawCircle(new Vector2(-250, 0), 50, segments);
-        Drawing.DrawCircleFilled(new Vector2(-100, 0), 50, segments);
-
-        Drawing.DrawEllipse(new Vector2(100, 0), new Vector2(40, 50), segments);
-        Drawing.DrawEllipseFilled(new Vector2(250, 0), new Vector2(40, 50), segments);
+        Drawing.DrawCircle(Vector2.Zero, 64);
 
         Windowing.SwapBuffers();
     }

@@ -296,7 +296,7 @@ public static class Drawing
         DrawPrimitive(vertices, 6, PrimitiveType.Triangles);
     }
 
-    public static void DrawCircle(Vector2 center, float radius, int segments)
+    public static void DrawCircle(Vector2 center, float radius, int segments = 32)
     {
         var vertices = new float[segments * 2];
 
@@ -310,7 +310,7 @@ public static class Drawing
         DrawPrimitive(vertices, segments, PrimitiveType.LineLoop);
     }
 
-    public static void DrawCircleFilled(Vector2 center, float radius, int segments)
+    public static void DrawCircleFilled(Vector2 center, float radius, int segments = 32)
     {
         var vertices = new float[(segments + 2) * 2];
 
@@ -330,7 +330,7 @@ public static class Drawing
         DrawPrimitive(vertices, segments + 2, PrimitiveType.TriangleFan);
     }
 
-    public static void DrawEllipse(Vector2 center, Vector2 radius, int segments)
+    public static void DrawEllipse(Vector2 center, Vector2 radius, int segments = 32)
     {
         var vertices = new float[segments * 2];
 
@@ -344,7 +344,7 @@ public static class Drawing
         DrawPrimitive(vertices, segments, PrimitiveType.LineLoop);
     }
 
-    public static void DrawEllipseFilled(Vector2 center, Vector2 radius, int segments)
+    public static void DrawEllipseFilled(Vector2 center, Vector2 radius, int segments = 32)
     {
         var vertices = new float[(segments + 2) * 2];
 
