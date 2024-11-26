@@ -312,7 +312,7 @@ public static class Drawing
 
     public static void DrawCircleFilled(Vector2 center, float radius, int segments)
     {
-        var vertices = new float[segments * 2 + 2];
+        var vertices = new float[(segments + 2) * 2];
 
         vertices[0] = center.X;
         vertices[1] = center.Y;
@@ -324,7 +324,10 @@ public static class Drawing
             vertices[(i + 1) * 2 + 1] = center.Y + radius * (float)Math.Sin(angle);
         }
 
-        DrawPrimitive(vertices, segments + 1, PrimitiveType.TriangleFan);
+        vertices[(segments + 1) * 2] = vertices[2];
+        vertices[(segments + 1) * 2 + 1] = vertices[3];
+
+        DrawPrimitive(vertices, segments + 2, PrimitiveType.TriangleFan);
     }
 
     public static void DrawEllipse(Vector2 center, Vector2 radius, int segments)
@@ -343,7 +346,7 @@ public static class Drawing
 
     public static void DrawEllipseFilled(Vector2 center, Vector2 radius, int segments)
     {
-        float[] vertices = new float[segments * 2 + 2];
+        var vertices = new float[(segments + 2) * 2];
 
         vertices[0] = center.X;
         vertices[1] = center.Y;
@@ -354,8 +357,11 @@ public static class Drawing
             vertices[(i + 1) * 2] = center.X + radius.X * (float)Math.Cos(angle);
             vertices[(i + 1) * 2 + 1] = center.Y + radius.Y * (float)Math.Sin(angle);
         }
-        
-        DrawPrimitive(vertices, segments + 1, PrimitiveType.TriangleFan);
+
+        vertices[(segments + 1) * 2] = vertices[2];
+        vertices[(segments + 1) * 2 + 1] = vertices[3];
+
+        DrawPrimitive(vertices, segments + 2, PrimitiveType.TriangleFan);
     }
 
     public static void DrawTriangle(Vector2 point1, Vector2 point2, Vector2 point3)
