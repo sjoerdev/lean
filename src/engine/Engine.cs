@@ -324,6 +324,9 @@ public static class Drawing
             vertices[(i + 1) * 2 + 1] = center.Y + radius * (float)Math.Sin(angle);
         }
 
+        vertices[segments * 2] = vertices[2];
+        vertices[segments * 2 + 1] = vertices[3];
+
         DrawPrimitive(vertices, segments + 1, PrimitiveType.TriangleFan);
     }
 

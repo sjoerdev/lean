@@ -29,12 +29,12 @@ class Game
         Drawing.SetColor(Color.Red);
 
         //Drawing.DrawCircle(Vector2.Zero, 64, 50);
-        //Drawing.DrawCircleFilled(Vector2.Zero, 64, 50);
+        Drawing.DrawCircleFilled(Vector2.Zero, 64, 50);
 
         //Drawing.DrawEllipse(Vector2.Zero, new Vector2(64, 32), 50);
         //Drawing.DrawEllipseFilled(Vector2.Zero, new Vector2(64, 32), 50);
 
-        Drawing.DrawRectangle(Vector2.Zero, new Vector2(32, 32));
+        //Drawing.DrawRectangle(Vector2.Zero, new Vector2(32, 32));
 
         Windowing.SwapBuffers();
     }
