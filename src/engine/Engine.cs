@@ -7,7 +7,6 @@ using System.IO;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-using Silk.NET.OpenAL;
 
 namespace Engine;
 
@@ -406,22 +405,7 @@ public static class Audio
 {
     public unsafe static void PlayAudioClipWav(AudioClipWav clip)
     {
-        var openal = AL.GetApi();
-        uint buffer = openal.GenBuffer();
-
-        BufferFormat format = BufferFormat.Stereo16;
-        int bits = clip.bitsPerSample;
-        bool stereo = clip.stereo;
-        bool mono = !stereo;
-        if (stereo && bits == 16) format = BufferFormat.Stereo16;
-        if (stereo && bits == 8) format = BufferFormat.Stereo8;
-        if (mono && bits == 16) format = BufferFormat.Mono16;
-        if (mono && bits == 8) format = BufferFormat.Mono8;
-
-        fixed (void* ptr = &clip.audioData[0]) openal.BufferData(buffer, format, ptr, clip.audioData.Length, clip.sampleRate);
-
-        var source = openal.GenSource();
-        openal.SourcePlay(source);
+        Console.WriteLine("not yet implemented");
     }
 }
 
