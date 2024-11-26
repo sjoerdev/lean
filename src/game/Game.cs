@@ -1,13 +1,13 @@
 using System;
-using System.Numerics;
+using Engine;
 
 class Game
 {
     static void Main()
     {
-        Engine.SetupWindow(new Vector2(1280, 720), "Spank Engine Game");
-        Engine.SetupCallbacks(OnLoad, OnUpdate, OnRender);
-        Engine.RunWindow();
+        Window.Create(800, 600, "Game");
+        Window.SetupCallbacks(OnLoad, OnUpdate, OnRender);
+        Window.Run();
     }
 
     static void OnLoad()
@@ -17,7 +17,7 @@ class Game
 
     static void OnUpdate(float deltaTime)
     {
-        if (Engine.GetKeyDown(Key.Space)) Console.WriteLine("Space");
+        if (Input.GetKeyDown(Silk.NET.Input.Key.Space)) Console.WriteLine("Space");
     }
 
     static void OnRender(float deltaTime)
