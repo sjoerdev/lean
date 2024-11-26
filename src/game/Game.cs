@@ -1,15 +1,14 @@
 using System;
 using System.Drawing;
 using System.Numerics;
+
 using Engine;
 
 class Game
 {
     static void Main()
     {
-        Window.Create(800, 600, "Game");
-        Window.SetupCallbacks(OnLoad, OnUpdate, OnRender);
-        Window.Run();
+        Windowing.CreateWindow(800, 600, "Game", OnLoad, OnUpdate, OnRender);
     }
 
     static void OnLoad()
@@ -30,6 +29,6 @@ class Game
         Drawing.SetColor(Color.Red);
         Drawing.DrawCircle(Vector2.Zero, 64, 32);
 
-        Window.SwapBuffers();
+        Windowing.SwapBuffers();
     }
 }

@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Numerics;
+
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
 namespace Engine;
 
-public static class Window
+public static class Windowing
 {
     private static IWindow window;
 
@@ -43,32 +43,26 @@ public static class Window
         set => window.WindowState = value ? WindowState.Fullscreen : WindowState.Normal;
     }
 
-    public static void Create(int width, int height, string title)
+    public static void CreateWindow(int width, int height, string title, Action OnLoad, Action<float> OnUpdate, Action<float> OnRender)
     {
+        // create window
         var options = WindowOptions.Default;
         options.Size = new(width, height);
         options.Title = title;
-        window = Silk.NET.Windowing.Window.Create(options);
-    }
+        window = Window.Create(options);
 
-    public static void SetupCallbacks(Action OnLoad, Action<float> OnUpdate, Action<float> OnRender)
-    {
         // game callbacks
         window.Load += OnLoad;
         window.Update += (double delta) => OnUpdate((float)delta);
         window.Render += (double delta) => OnRender((float)delta);
 
-        // input callbacks
+        // engine callbacks
         window.Load += () => Input.Initialize(window);
-        window.Update += (double delta) => Input.UpdateInputState();
-
-        // drawing callbacks
         window.Load += () => Drawing.Initialize(window);
+        window.Update += (double delta) => Input.UpdateInputState();
         window.FramebufferResize += (size) => Drawing.ResizeViewport(new(size.X, size.Y));
-    }
 
-    public static void Run()
-    {
+        // run window
         window.Run();
         window.Dispose();
     }
