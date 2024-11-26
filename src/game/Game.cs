@@ -28,13 +28,13 @@ class Game
 
         Drawing.SetColor(Color.Red);
 
-        //Drawing.DrawCircle(Vector2.Zero, 64, 50);
-        //Drawing.DrawCircleFilled(Vector2.Zero, 64, 50);
+        int segments = 8;
 
-        //Drawing.DrawEllipse(Vector2.Zero, new Vector2(64, 32), 50);
-        Drawing.DrawEllipseFilled(Vector2.Zero, new Vector2(64, 32), 50);
+        Drawing.DrawCircle(new Vector2(-250, 0), 50, segments);
+        Drawing.DrawCircleFilled(new Vector2(-100, 0), 50, segments);
 
-        //Drawing.DrawRectangle(Vector2.Zero, new Vector2(32, 32));
+        Drawing.DrawEllipse(new Vector2(100, 0), new Vector2(40, 50), segments);
+        Drawing.DrawEllipseFilled(new Vector2(250, 0), new Vector2(40, 50), segments);
 
         Windowing.SwapBuffers();
     }
