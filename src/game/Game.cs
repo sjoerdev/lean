@@ -4,24 +4,30 @@ using System.Numerics;
 
 using Engine;
 
-class Game
+public static class Entry
 {
     static void Main()
     {
-        Windowing.CreateWindow(800, 600, "Game", OnLoad, OnUpdate, OnRender);
+        Game game = new Game();
+        Windowing.CreateWindow(800, 600, "Game", game.OnLoad, game.OnUpdate, game.OnRender);
     }
+}
 
-    static void OnLoad()
+public class Game
+{
+    AudioClipWav testaudio;
+
+    public void OnLoad()
     {
-        // load resources here
+        testaudio = new AudioClipWav("src/game/sound/powerup.wav");
     }
 
-    static void OnUpdate(float deltaTime)
+    public void OnUpdate(float deltaTime)
     {
-        if (Input.GetKeyDown(Key.Space)) Console.WriteLine("Space");
+        if (Input.GetKeyDown(Key.Space)) Audio.PlayAudioClipWav(testaudio);
     }
 
-    static void OnRender(float deltaTime)
+    public void OnRender(float deltaTime)
     {
         Drawing.SetColor(Color.CornflowerBlue);
         Drawing.ClearWindow();

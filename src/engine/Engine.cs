@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
+using System.IO;
 
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
+using Silk.NET.OpenAL;
 
 namespace Engine;
 
@@ -392,13 +394,6 @@ public static class Drawing
     public static void DrawText(string text, Vector2 position, int size){}
 }
 
-public static class Audio
-{
-    public static void PlayAudioClip(AudioClip clip){}
-    public static void StopAudioClip(AudioClip clip){}
-    public static void SetVolume(float volume){}
-}
-
 public class Sprite
 {
     public Sprite(string path)
@@ -407,11 +402,52 @@ public class Sprite
     }
 }
 
-public class AudioClip
+public static class Audio
 {
-    public AudioClip(string path)
+    public unsafe static void PlayAudioClipWav(AudioClipWav clip)
     {
-        // load audio file
+        var openal = AL.GetApi();
+        uint buffer = openal.GenBuffer();
+
+        BufferFormat format = BufferFormat.Stereo16;
+        int bits = clip.bitsPerSample;
+        bool stereo = clip.stereo;
+        bool mono = !stereo;
+        if (stereo && bits == 16) format = BufferFormat.Stereo16;
+        if (stereo && bits == 8) format = BufferFormat.Stereo8;
+        if (mono && bits == 16) format = BufferFormat.Mono16;
+        if (mono && bits == 8) format = BufferFormat.Mono8;
+
+        fixed (void* ptr = &clip.audioData[0]) openal.BufferData(buffer, format, ptr, clip.audioData.Length, clip.sampleRate);
+
+        var source = openal.GenSource();
+        openal.SourcePlay(source);
+    }
+}
+
+public class AudioClipWav
+{
+    public byte[] audioData;
+    public int sampleRate;
+    public bool stereo;
+    public int bitsPerSample;
+
+    public AudioClipWav(string path)
+    {
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+
+        byte[] header = new byte[44];
+        stream.Read(header, 0, 44);
+
+        sampleRate = BitConverter.ToInt32(header, 24);
+        stereo = BitConverter.ToInt16(header, 22) > 1;
+        bitsPerSample = BitConverter.ToInt16(header, 34);
+
+        int dataChunkSize = BitConverter.ToInt32(header, 40);
+        audioData = new byte[dataChunkSize];
+        stream.Read(audioData, 0, dataChunkSize);
+
+        stream.Dispose();
     }
 }
 
