@@ -18,7 +18,7 @@ class Game
 
     static void OnUpdate(float deltaTime)
     {
-        if (Input.GetKeyDown(Silk.NET.Input.Key.Space)) Console.WriteLine("Space");
+        if (Input.GetKeyDown(Key.Space)) Console.WriteLine("Space");
     }
 
     static void OnRender(float deltaTime)
@@ -27,7 +27,6 @@ class Game
         Drawing.ClearWindow();
 
         Drawing.SetColor(Color.Red);
-
         Drawing.DrawCircle(Vector2.Zero, 64);
 
         Windowing.SwapBuffers();
