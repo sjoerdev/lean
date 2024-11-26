@@ -71,8 +71,6 @@ public static class Window
         window.Run();
         window.Dispose();
     }
-
-    
 }
 
 public static class Input
@@ -88,7 +86,6 @@ public static class Input
     private static List<Key> keysUpLastFrame = [];
     private static List<MouseButton> mouseButtonsDownLastFrame = [];
     private static List<MouseButton> mouseButtonsUpLastFrame = [];
-    private static Vector2 mousePosition;
 
     public static bool GetKey(Key key) => keysPressed.Contains(key);
     public static bool GetKeyDown(Key key) => keysDown.Contains(key);
@@ -96,7 +93,7 @@ public static class Input
     public static bool GetMouseButton(MouseButton button) => mouseButtonsPressed.Contains(button);
     public static bool GetMouseButtonDown(MouseButton button) => mouseButtonsDown.Contains(button);
     public static bool GetMouseButtonUp(MouseButton button) => mouseButtonsUp.Contains(button);
-    public static Vector2 GetMousePosition() => mousePosition;
+    public static Vector2 GetMousePosition() => inputContext.Mice[0].Position;
 
     public static void Initialize(IWindow window)
     {
@@ -107,7 +104,6 @@ public static class Input
         keyboard.KeyUp += (kb, key, idk) => keysUpLastFrame.Add((Key)key);
         mouse.MouseDown += (mouse, button) => mouseButtonsDownLastFrame.Add(button);
         mouse.MouseUp += (mouse, button) => mouseButtonsUpLastFrame.Add(button);
-        mouse.MouseMove += (mouse, position) => mousePosition = position;
     }
 
     public static void UpdateInputState()
