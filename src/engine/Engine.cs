@@ -411,6 +411,63 @@ public class Sprite
     }
 }
 
+public class StreamingAudioClipWav
+{
+    // wav file data
+    int sampleRate;
+    bool stereo;
+    int bitsPerSample;
+
+    // openal
+    uint[] buffers;
+    uint source;
+
+    // streaming
+    FileStream stream;
+    int bufferAmount = 4;
+    int secondsPerBuffer = 1;
+    int bufferSize => sampleRate * (stereo ? 2 : 1) * (bitsPerSample / 8) * secondsPerBuffer;
+
+    public unsafe StreamingAudioClipWav(string path)
+    {
+        // start audio file stream
+        stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+
+        // read wav header
+        byte[] header = new byte[44];
+        stream.Read(header, 0, 44);
+        sampleRate = BitConverter.ToInt32(header, 24);
+        stereo = BitConverter.ToInt16(header, 22) > 1;
+        bitsPerSample = BitConverter.ToInt16(header, 34);
+
+        // setup openal buffers and source
+        buffers = new uint[bufferAmount];
+        fixed (uint* ptr = &buffers[0]) OpenAL.GenBuffers(4, ptr);
+        fixed (uint* ptr = &source) OpenAL.GenSources(1, ptr);
+    }
+
+    public void Play(){}
+    public void Pause(){}
+    public void Stop(){}
+
+    private ALEnum GetFormat()
+    {
+        ALEnum? format = null;
+        if (stereo)
+        {
+            if (bitsPerSample == 16) format = ALEnum.FormatStereo16;
+            if (bitsPerSample == 8) format = ALEnum.FormatStereo8;
+        }
+        else
+        {
+            if (bitsPerSample == 16) format = ALEnum.FormatMono16;
+            if (bitsPerSample == 8) format = ALEnum.FormatMono8;
+        }
+        return format.Value;
+    }
+}
+
+
 public class AudioClipWav
 {
     // wav file data
@@ -462,12 +519,6 @@ public class AudioClipWav
             if (bitsPerSample == 8) format = ALEnum.FormatMono8;
         }
         return format.Value;
-    }
-
-    private ALEnum GetState()
-    {
-        OpenAL.GetSourceProperty(source, ALEnum.SourceState, out int state);
-        return (ALEnum)state;
     }
 }
 
