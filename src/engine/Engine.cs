@@ -1,8 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Numerics;
 using System.IO;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Drawing;
+using System.Timers;
 
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -411,7 +412,7 @@ public class Sprite
     }
 }
 
-public class StreamingAudioClipWav
+public unsafe class AudioClipWav
 {
     // wav file data
     int sampleRate;
@@ -423,12 +424,13 @@ public class StreamingAudioClipWav
     uint source;
 
     // streaming
+    Timer timer;
     FileStream stream;
     int bufferAmount = 4;
     int secondsPerBuffer = 1;
     int bufferSize => sampleRate * (stereo ? 2 : 1) * (bitsPerSample / 8) * secondsPerBuffer;
 
-    public unsafe StreamingAudioClipWav(string path)
+    public AudioClipWav(string path)
     {
         // start audio file stream
         stream = new FileStream(path, FileMode.Open, FileAccess.Read);
@@ -440,37 +442,103 @@ public class StreamingAudioClipWav
         stereo = BitConverter.ToInt16(header, 22) > 1;
         bitsPerSample = BitConverter.ToInt16(header, 34);
 
-        // setup openal buffers and source
+        // setup openal buffers
         buffers = new uint[bufferAmount];
-        fixed (uint* ptr = &buffers[0]) OpenAL.GenBuffers(4, ptr);
+        fixed (uint* ptr = &buffers[0]) OpenAL.GenBuffers(bufferAmount, ptr);
+
+        // setup openal source
         fixed (uint* ptr = &source) OpenAL.GenSources(1, ptr);
+        OpenAL.SetSourceProperty(source, ALEnum.SourceType, (int)ALEnum.Streaming);
+
+        // Setup timer
+        timer = new Timer(50);
+        timer.Elapsed += (sender, args) => RecycleUsedBuffers();
     }
 
-    public void Play(){}
-    public void Pause(){}
-    public void Stop(){}
+    public void Start()
+    {
+        // cannot start if already playing or paused
+        if (GetState() == ALEnum.Playing || GetState() == ALEnum.Paused) return;
+        
+        // que first buffers
+        for (int i = 0; i < bufferAmount; i++)
+        {
+            FillBuffer(buffers[i]);
+            fixed (uint* ptr = &buffers[i]) OpenAL.SourceQueueBuffers(source, 1, ptr);
+        }
+
+        // start source and timer
+        OpenAL.SourcePlay(source);
+        timer.Start();
+    }
+
+    public void PauseOrContinue()
+    {
+        RecycleUsedBuffers();
+        if (GetState() == ALEnum.Playing) OpenAL.SourcePause(source);
+        else if (GetState() == ALEnum.Paused) OpenAL.SourcePlay(source);
+    }
+
+    public void Stop()
+    {
+        // already stopped
+        if (GetState() == ALEnum.Stopped) return;
+
+        // stop timer and source
+        timer.Stop();
+        OpenAL.SourceStop(source);
+
+        // unque buffers
+        OpenAL.GetSourceProperty(source, ALEnum.BuffersProcessed, out int processed);
+        if (processed > 0)
+        {
+            uint[] buffersToUnqueue = new uint[processed];
+            fixed (uint* ptr = &buffersToUnqueue[0]) OpenAL.SourceUnqueueBuffers(source, processed, ptr);
+        }
+
+        // reset filestream
+        stream.Seek(0, SeekOrigin.Begin);
+    }
+
+    // fills a buffer at the current filestream position
+    private void FillBuffer(uint buffer)
+    {
+        byte[] audioData = new byte[bufferSize];
+        int bytesRead = stream.Read(audioData, 0, audioData.Length);
+        if (bytesRead == 0) { OpenAL.SourceStop(source); Console.WriteLine("it happened"); return; }
+        fixed (void* data = &audioData[0]) OpenAL.BufferData(buffer, GetFormat(), data, bytesRead, sampleRate);
+    }
+
+    // if a buffer is used it gets recycled and requed
+    private void RecycleUsedBuffers()
+    {
+        OpenAL.GetSourceProperty(source, ALEnum.BuffersProcessed, out int processed);
+        for (uint i = 0; i < processed; i++)
+        {
+            uint buffer;
+            OpenAL.SourceUnqueueBuffers(source, 1, &buffer);
+            FillBuffer(buffer);
+            OpenAL.SourceQueueBuffers(source, 1, &buffer);
+        }
+    }
 
     private ALEnum GetFormat()
     {
-        ALEnum? format = null;
-        if (stereo)
-        {
-            if (bitsPerSample == 16) format = ALEnum.FormatStereo16;
-            if (bitsPerSample == 8) format = ALEnum.FormatStereo8;
-        }
-        else
-        {
-            if (bitsPerSample == 16) format = ALEnum.FormatMono16;
-            if (bitsPerSample == 8) format = ALEnum.FormatMono8;
-        }
-        return format.Value;
+        ALEnum format;
+        format = stereo ? (bitsPerSample == 16 ? ALEnum.FormatStereo16 : ALEnum.FormatStereo8) : (bitsPerSample == 16 ? ALEnum.FormatMono16 : ALEnum.FormatMono8);
+        return format;
+    }
+
+    private ALEnum GetState()
+    {
+        OpenAL.GetSourceProperty(source, ALEnum.SourceState, out int state);
+        return (ALEnum)state;
     }
 }
 
-
-public class AudioClipWav
+public class AudioClipWavWithoutStreaming
 {
-    // wav file data
+    // entire wav file data
     byte[] audioData;
     int sampleRate;
     bool stereo;
@@ -480,9 +548,9 @@ public class AudioClipWav
     uint buffer;
     uint source;
 
-    public unsafe AudioClipWav(string path)
+    public unsafe AudioClipWavWithoutStreaming(string path)
     {
-        // read wav file data
+        // read entire wav file data
         var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
         byte[] header = new byte[44];
         stream.Read(header, 0, 44);
@@ -501,24 +569,35 @@ public class AudioClipWav
         OpenAL.SetSourceProperty(source, ALEnum.Buffer, (int)buffer);
     }
 
-    public void Play() => OpenAL.SourcePlay(source);
-    public void Pause() => OpenAL.SourcePause(source);
-    public void Stop() => OpenAL.SourceStop(source);
+    public void Start()
+    {
+        if (GetState() == ALEnum.Playing || GetState() == ALEnum.Paused) return;
+        OpenAL.SourcePlay(source);
+    }
+
+    public void PauseOrContinue()
+    {
+        if (GetState() == ALEnum.Playing) OpenAL.SourcePause(source);
+        else if (GetState() == ALEnum.Paused) OpenAL.SourcePlay(source);
+    }
+
+    public void Stop()
+    {
+        if (GetState() == ALEnum.Stopped) return;
+        OpenAL.SourceStop(source);
+    }
 
     private ALEnum GetFormat()
     {
-        ALEnum? format = null;
-        if (stereo)
-        {
-            if (bitsPerSample == 16) format = ALEnum.FormatStereo16;
-            if (bitsPerSample == 8) format = ALEnum.FormatStereo8;
-        }
-        else
-        {
-            if (bitsPerSample == 16) format = ALEnum.FormatMono16;
-            if (bitsPerSample == 8) format = ALEnum.FormatMono8;
-        }
-        return format.Value;
+        ALEnum format;
+        format = stereo ? (bitsPerSample == 16 ? ALEnum.FormatStereo16 : ALEnum.FormatStereo8) : (bitsPerSample == 16 ? ALEnum.FormatMono16 : ALEnum.FormatMono8);
+        return format;
+    }
+
+    private ALEnum GetState()
+    {
+        OpenAL.GetSourceProperty(source, ALEnum.SourceState, out int state);
+        return (ALEnum)state;
     }
 }
 

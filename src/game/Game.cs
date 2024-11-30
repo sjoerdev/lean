@@ -18,12 +18,14 @@ public class Game
 
     public void OnLoad()
     {
-        testaudio = new AudioClipWav("src/game/sound/powerup.wav");
+        testaudio = new AudioClipWav("src/game/sound/thegardens.wav");
     }
 
     public void OnUpdate(float deltaTime)
     {
-        if (Input.GetKeyDown(Key.Space)) testaudio.Play();
+        if (Input.GetKeyDown(Key.I)) testaudio.Start();
+        if (Input.GetKeyDown(Key.O)) testaudio.PauseOrContinue();
+        if (Input.GetKeyDown(Key.P)) testaudio.Stop();
     }
 
     public void OnRender(float deltaTime)
