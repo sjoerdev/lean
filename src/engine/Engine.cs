@@ -8,6 +8,8 @@ using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
+using Hexa.NET.OpenAL;
+
 namespace Engine;
 
 public static class Windowing
@@ -57,9 +59,12 @@ public static class Windowing
         window.Update += (double delta) => OnUpdate((float)delta);
         window.Render += (double delta) => OnRender((float)delta);
 
-        // engine callbacks
+        // engine initialize callbacks
+        window.Load += () => Audio.Initialize();
         window.Load += () => Input.Initialize(window);
         window.Load += () => Drawing.Initialize(window);
+
+        // engine other callbacks
         window.Update += (double delta) => Input.UpdateInputState();
         window.FramebufferResize += (size) => Drawing.ResizeViewport(new(size.X, size.Y));
 
@@ -401,11 +406,49 @@ public class Sprite
     }
 }
 
-public static class Audio
+public unsafe static class Audio
 {
-    public unsafe static void PlayAudioClipWav(AudioClipWav clip)
+    static ALCdevice* device;
+    static ALCcontext* context;
+
+    public static void Initialize()
     {
-        Console.WriteLine("not yet implemented");
+        device = OpenAL.OpenDevice((byte*)null);
+        context = OpenAL.CreateContext(device);
+        OpenAL.MakeContextCurrent(context);
+    }
+
+    public static void PlayAudioClipWav(AudioClipWav clip)
+    {
+        // generate buffer
+        uint buffer;
+        OpenAL.GenBuffers(1, &buffer);
+
+        // generate source
+        uint source;
+        OpenAL.GenSources(1, &source);
+
+        // find openal format
+        ALEnum? format = null;
+        if (clip.stereo)
+        {
+            if (clip.bitsPerSample == 16) format = ALEnum.FormatStereo16;
+            if (clip.bitsPerSample == 8) format = ALEnum.FormatStereo8;
+        }
+        else
+        {
+            if (clip.bitsPerSample == 16) format = ALEnum.FormatStereo16;
+            if (clip.bitsPerSample == 8) format = ALEnum.FormatStereo8;
+        }
+
+        // fill buffer with audio data
+        fixed (void* ptr = &clip.audioData[0]) OpenAL.BufferData(buffer, format.Value, ptr, clip.audioData.Length, clip.sampleRate);
+
+        // attach buffer to source
+        OpenAL.SetSourceProperty(source, ALEnum.Buffer, (int)buffer);
+
+        // play source
+        OpenAL.SourcePlay(source);
     }
 }
 
