@@ -415,6 +415,7 @@ public class Sprite
 public unsafe class AudioClipWav
 {
     // wav file data
+    int dataPosition;
     int sampleRate;
     bool stereo;
     int bitsPerSample;
@@ -441,6 +442,10 @@ public unsafe class AudioClipWav
         sampleRate = BitConverter.ToInt32(header, 24);
         stereo = BitConverter.ToInt16(header, 22) > 1;
         bitsPerSample = BitConverter.ToInt16(header, 34);
+
+        // find and skip to actual sound data position
+        dataPosition = FindDataChunkPosition();
+        stream.Position = dataPosition;
 
         // setup openal buffers
         buffers = new uint[bufferAmount];
@@ -496,8 +501,34 @@ public unsafe class AudioClipWav
             fixed (uint* ptr = &buffersToUnqueue[0]) OpenAL.SourceUnqueueBuffers(source, processed, ptr);
         }
 
-        // reset filestream
-        stream.Seek(0, SeekOrigin.Begin);
+        // reset filestream position
+        stream.Position = dataPosition;
+    }
+
+    // finds the data chunk position
+    public int FindDataChunkPosition()
+    {
+        using var tempStream = new FileStream(stream.Name, FileMode.Open, FileAccess.Read);
+        
+        // skip the 12 byte long riff header ("riff", filesize, "wave")
+        tempStream.Position = 12;
+
+        while (tempStream.Position < tempStream.Length)
+        {
+            // read chunk name and size
+            byte[] buffer = new byte[8];
+            tempStream.Read(buffer, 0, 8);
+            string chunkName = System.Text.Encoding.ASCII.GetString(buffer, 0, 4);
+            int chunkSize = BitConverter.ToInt32(buffer, 4);
+
+            // if chunk name is data then we found the position
+            if (chunkName == "data") return (int)tempStream.Position;
+
+            // skip chunk
+            tempStream.Position += chunkSize;
+        }
+
+        return 0;
     }
 
     // fills a buffer at the current filestream position
