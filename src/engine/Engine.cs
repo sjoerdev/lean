@@ -46,7 +46,7 @@ public static class Windowing
         set => window.WindowState = value ? WindowState.Fullscreen : WindowState.Normal;
     }
 
-    public static void CreateWindow(int width, int height, string title, Action OnLoad, Action<float> OnUpdate, Action<float> OnRender)
+    public unsafe static void CreateWindow(int width, int height, string title, Action OnLoad, Action<float> OnUpdate, Action<float> OnRender)
     {
         // create window
         var options = WindowOptions.Default;
@@ -54,19 +54,24 @@ public static class Windowing
         options.Title = title;
         window = Window.Create(options);
 
-        // game callbacks
-        window.Load += OnLoad;
-        window.Update += (double delta) => OnUpdate((float)delta);
-        window.Render += (double delta) => OnRender((float)delta);
-
         // engine initialize callbacks
-        window.Load += () => Audio.Initialize();
         window.Load += () => Input.Initialize(window);
         window.Load += () => Drawing.Initialize(window);
+        window.Load += () => 
+        {
+            ALCdevice* device = OpenAL.OpenDevice((byte*)null);
+            ALCcontext* context = OpenAL.CreateContext(device);
+            OpenAL.MakeContextCurrent(context);
+        };
 
         // engine other callbacks
         window.Update += (double delta) => Input.UpdateInputState();
         window.FramebufferResize += (size) => Drawing.ResizeViewport(new(size.X, size.Y));
+
+        // game callbacks
+        window.Load += OnLoad;
+        window.Update += (double delta) => OnUpdate((float)delta);
+        window.Render += (double delta) => OnRender((float)delta);
 
         // run window
         window.Run();
@@ -406,75 +411,63 @@ public class Sprite
     }
 }
 
-public unsafe static class Audio
-{
-    static ALCdevice* device;
-    static ALCcontext* context;
-
-    public static void Initialize()
-    {
-        device = OpenAL.OpenDevice((byte*)null);
-        context = OpenAL.CreateContext(device);
-        OpenAL.MakeContextCurrent(context);
-    }
-
-    public static void PlayAudioClipWav(AudioClipWav clip)
-    {
-        // generate buffer
-        uint buffer;
-        OpenAL.GenBuffers(1, &buffer);
-
-        // generate source
-        uint source;
-        OpenAL.GenSources(1, &source);
-
-        // find openal format
-        ALEnum? format = null;
-        if (clip.stereo)
-        {
-            if (clip.bitsPerSample == 16) format = ALEnum.FormatStereo16;
-            if (clip.bitsPerSample == 8) format = ALEnum.FormatStereo8;
-        }
-        else
-        {
-            if (clip.bitsPerSample == 16) format = ALEnum.FormatStereo16;
-            if (clip.bitsPerSample == 8) format = ALEnum.FormatStereo8;
-        }
-
-        // fill buffer with audio data
-        fixed (void* ptr = &clip.audioData[0]) OpenAL.BufferData(buffer, format.Value, ptr, clip.audioData.Length, clip.sampleRate);
-
-        // attach buffer to source
-        OpenAL.SetSourceProperty(source, ALEnum.Buffer, (int)buffer);
-
-        // play source
-        OpenAL.SourcePlay(source);
-    }
-}
-
 public class AudioClipWav
 {
-    public byte[] audioData;
-    public int sampleRate;
-    public bool stereo;
-    public int bitsPerSample;
+    // wav file data
+    byte[] audioData;
+    int sampleRate;
+    bool stereo;
+    int bitsPerSample;
 
-    public AudioClipWav(string path)
+    // openal
+    uint buffer;
+    uint source;
+
+    public unsafe AudioClipWav(string path)
     {
+        // read wav file data
         var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
-
         byte[] header = new byte[44];
         stream.Read(header, 0, 44);
-
         sampleRate = BitConverter.ToInt32(header, 24);
         stereo = BitConverter.ToInt16(header, 22) > 1;
         bitsPerSample = BitConverter.ToInt16(header, 34);
-
         int dataChunkSize = BitConverter.ToInt32(header, 40);
         audioData = new byte[dataChunkSize];
         stream.Read(audioData, 0, dataChunkSize);
-
         stream.Dispose();
+
+        // setup openal buffer and source
+        fixed (uint* ptr = &buffer) OpenAL.GenBuffers(1, ptr);
+        fixed (uint* ptr = &source) OpenAL.GenSources(1, ptr);
+        fixed (void* ptr = &audioData[0]) OpenAL.BufferData(buffer, GetFormat(), ptr, audioData.Length, sampleRate);
+        OpenAL.SetSourceProperty(source, ALEnum.Buffer, (int)buffer);
+    }
+
+    public void Play() => OpenAL.SourcePlay(source);
+    public void Pause() => OpenAL.SourcePause(source);
+    public void Stop() => OpenAL.SourceStop(source);
+
+    private ALEnum GetFormat()
+    {
+        ALEnum? format = null;
+        if (stereo)
+        {
+            if (bitsPerSample == 16) format = ALEnum.FormatStereo16;
+            if (bitsPerSample == 8) format = ALEnum.FormatStereo8;
+        }
+        else
+        {
+            if (bitsPerSample == 16) format = ALEnum.FormatMono16;
+            if (bitsPerSample == 8) format = ALEnum.FormatMono8;
+        }
+        return format.Value;
+    }
+
+    private ALEnum GetState()
+    {
+        OpenAL.GetSourceProperty(source, ALEnum.SourceState, out int state);
+        return (ALEnum)state;
     }
 }
 
