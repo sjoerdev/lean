@@ -1,41 +1,36 @@
 using System.Drawing;
 using System.Numerics;
 
-using Engine;
+using Lean;
 
-public static class Entry
+namespace Game;
+
+public static class Game
 {
+    static AudioClipWav testaudio;
+
     static void Main()
     {
-        var game = new Game();
-        Windowing.CreateWindow(800, 600, "This is a game window", game.OnLoad, game.OnUpdate, game.OnRender);
+        Windowing.SetupWindow(800, 600, "This is a game window", OnLoad, OnUpdate, OnRender);
     }
-}
 
-public class Game
-{
-    AudioClipWav testaudio;
-
-    public void OnLoad()
+    public static void OnLoad()
     {
-        testaudio = new AudioClipWav("src/game/sound/powerup.wav");
+        testaudio = new AudioClipWav("res/wav/powerup.wav");
     }
 
-    public void OnUpdate(float deltaTime)
+    public static void OnUpdate(float delta)
     {
         if (Input.GetKeyDown(Key.I)) testaudio.Start();
         if (Input.GetKeyDown(Key.O)) testaudio.PauseOrContinue();
         if (Input.GetKeyDown(Key.P)) testaudio.Stop();
     }
 
-    public void OnRender(float deltaTime)
+    public static void OnRender(float delta)
     {
         Drawing.SetColor(Color.CornflowerBlue);
         Drawing.ClearWindow();
-
         Drawing.SetColor(Color.Red);
         Drawing.DrawCircle(Vector2.Zero, 64);
-
-        Windowing.SwapBuffers();
     }
 }
