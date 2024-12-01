@@ -531,13 +531,13 @@ public unsafe class AudioClipWav
         return 0;
     }
 
-    // fills a buffer at the current filestream position
-    private void FillBuffer(uint buffer)
+    // fills a buffer at the current filestream position and returns the amount of actual audio bytes that where put in the buffer
+    private int FillBuffer(uint buffer)
     {
         byte[] audioData = new byte[bufferSize];
         int bytesRead = stream.Read(audioData, 0, audioData.Length);
-        if (bytesRead == 0) { OpenAL.SourceStop(source); Console.WriteLine("it happened"); return; }
         fixed (void* data = &audioData[0]) OpenAL.BufferData(buffer, GetFormat(), data, bytesRead, sampleRate);
+        return bytesRead;
     }
 
     // if a buffer is used it gets recycled and requed
@@ -546,9 +546,21 @@ public unsafe class AudioClipWav
         OpenAL.GetSourceProperty(source, ALEnum.BuffersProcessed, out int processed);
         for (uint i = 0; i < processed; i++)
         {
+            // unque
             uint buffer;
             OpenAL.SourceUnqueueBuffers(source, 1, &buffer);
-            FillBuffer(buffer);
+
+            // read bytes from stream
+            int bytesRead = FillBuffer(buffer);
+
+            // stop if no more audio data
+            if (bytesRead == 0)
+            {
+                Stop();
+                return;
+            }
+
+            // que new buffer
             OpenAL.SourceQueueBuffers(source, 1, &buffer);
         }
     }

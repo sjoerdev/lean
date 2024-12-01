@@ -18,7 +18,7 @@ public class Game
 
     public void OnLoad()
     {
-        testaudio = new AudioClipWav("src/game/sound/thegardens.wav");
+        testaudio = new AudioClipWav("src/game/sound/powerup.wav");
     }
 
     public void OnUpdate(float deltaTime)
