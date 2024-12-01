@@ -37,9 +37,6 @@ public static class Windowing
         window.Update += (delta) => OnUpdate((float)delta);
         window.Render += (delta) => OnRender((float)delta);
 
-        // swap buffers callback
-        window.Render += (delta) => window.SwapBuffers();
-
         // run window
         window.Run();
         window.Dispose();

@@ -26,7 +26,15 @@ public static class Input
     public static bool GetMouseButton(MouseButton button) => mouseButtonsPressed.Contains(button);
     public static bool GetMouseButtonDown(MouseButton button) => mouseButtonsDown.Contains(button);
     public static bool GetMouseButtonUp(MouseButton button) => mouseButtonsUp.Contains(button);
-    public static Vector2 GetMousePosition() => inputContext.Mice[0].Position;
+    public static Vector2 GetMousePosition()
+    {
+        var mousepos = inputContext.Mice[0].Position;
+        var resolution = Windowing.Resolution;
+        var offset = resolution / 2;
+        var offsetmousepos = mousepos - offset;
+        var yinvertedoffsetmousepos = new Vector2(offsetmousepos.X, -offsetmousepos.Y);
+        return yinvertedoffsetmousepos;
+    }
 
     public static void Initialize(IWindow window)
     {
