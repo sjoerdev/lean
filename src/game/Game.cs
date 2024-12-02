@@ -50,6 +50,6 @@ public static class Game
         Drawing.DrawCircleFilled(Input.GetMousePosition(), 16);
 
         // draw sprite
-        Drawing.DrawSprite(sprite, Vector2.Zero);
+        Drawing.DrawSprite(sprite, Vector2.Zero, 8);
     }
 }

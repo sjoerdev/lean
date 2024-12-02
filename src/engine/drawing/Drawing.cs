@@ -256,7 +256,7 @@ public static class Drawing
         opengl.BindVertexArray(0);
     }
 
-    public static unsafe void DrawSprite(Sprite sprite, Vector2 position)
+    public static unsafe void DrawSprite(Sprite sprite, Vector2 position, int scale = 1)
     {
         // use and bind
         sprite.shader.Use();
@@ -266,9 +266,9 @@ public static class Drawing
         sprite.shader.SetUniformTexture("tex", 0);
 
         // setup the quad
-        Vector2 spritesize = new Vector2(sprite.texture.width, sprite.texture.height);
-        Vector2 sprite_udc_mincorner = position / Windowing.Resolution;
-        Vector2 sprite_udc_maxcorner = (position + spritesize) / Windowing.Resolution;
+        Vector2 spritesize = new Vector2(sprite.texture.width, sprite.texture.height) * scale;
+        Vector2 sprite_udc_mincorner = (position - spritesize / 2f) / Windowing.Resolution;
+        Vector2 sprite_udc_maxcorner = (position + spritesize / 2f) / Windowing.Resolution;
 
         float[] vertices =
         [
