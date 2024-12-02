@@ -13,9 +13,13 @@ public static class Drawing
     private static uint vao;
     private static uint vbo;
 
+    public static GL GetOpenGL() => opengl;
+
     public static void Initialize(IWindow window)
     {
         opengl = GL.GetApi(window);
+        opengl.Enable(GLEnum.Blend);
+        opengl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
         program = CreateShaderProgram();
         vao = opengl.GenVertexArray();
         vbo = opengl.GenBuffer();
@@ -251,7 +255,30 @@ public static class Drawing
         opengl.BindVertexArray(0);
     }
 
-    // complex stuff
-    public static void DrawSprite(Sprite sprite, Vector2 position){}
-    public static void DrawText(string text, Vector2 position, int size){}
+    public static void DrawSprite(Sprite sprite, Vector2 position)
+    {
+        // bind
+        sprite.shader.Use();
+        sprite.texture.Bind();
+
+        // uniforms
+        sprite.shader.Use();
+        sprite.shader.SetUniform("resolution", Windowing.Resolution);
+        sprite.shader.SetUniform("position", position);
+        sprite.shader.SetUniform("tex", 0);
+
+        // setup a vao
+
+        // vertex attributes (vpositions and vtexcoords)
+        opengl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
+        opengl.EnableVertexAttribArray(0);
+        opengl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 2 * sizeof(float));
+        opengl.EnableVertexAttribArray(1);
+
+        // Disable vertex attributes and unbind
+        opengl.DisableVertexAttribArray(1);
+        opengl.DisableVertexAttribArray(0);
+        opengl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+        opengl.BindTexture(TextureTarget.Texture2D, 0);
+    }
 }

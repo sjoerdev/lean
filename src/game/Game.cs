@@ -7,6 +7,8 @@ namespace Game;
 
 public static class Game
 {
+    static Sprite sprite;
+
     static AudioClipWav music;
     static AudioClipWav effect;
 
@@ -17,8 +19,11 @@ public static class Game
 
     public static void OnLoad()
     {
+        sprite = new Sprite("res/png/player.png");
+
         effect = new AudioClipWav("res/wav/powerup.wav");
         music = new AudioClipWav("res/wav/thegardens.wav");
+
         music.Start();
     }
 
@@ -43,5 +48,8 @@ public static class Game
         // draw a white circle at the mouse position
         Drawing.SetColor(Color.White);
         Drawing.DrawCircleFilled(Input.GetMousePosition(), 16);
+
+        // draw sprite
+        Drawing.DrawSprite(sprite, Vector2.Zero);
     }
 }
