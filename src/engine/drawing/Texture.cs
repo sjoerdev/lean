@@ -20,13 +20,13 @@ public class Texture
         opengl.BindTexture(TextureTarget.Texture2D, handle);
 
         // set pixel data
-        fixed (void* dataPtr = data) opengl.TexImage2D(TextureTarget.Texture2D, 0, (int)InternalFormat.Rgba, (uint)this.width, (uint)this.height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, dataPtr);
+        fixed (void* ptr = data) opengl.TexImage2D(TextureTarget.Texture2D, 0, (int)InternalFormat.Rgba, (uint)this.width, (uint)this.height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, ptr);
 
         // set texture parameters
         opengl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
         opengl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
-        opengl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
-        opengl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+        opengl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToBorder);
+        opengl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToBorder);
 
         // unbind
         opengl.BindTexture(TextureTarget.Texture2D, 0);

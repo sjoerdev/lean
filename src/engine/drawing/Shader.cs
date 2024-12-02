@@ -14,37 +14,39 @@ public class Shader
 
     public Shader(string vertpath, string fragpath)
     {
-        // read shader source code
+        // read
         string vertsource = File.ReadAllText(vertpath);
         string fragsource = File.ReadAllText(fragpath);
 
-        // compile vert and frag
-        uint vertexshader = CompileShader(GLEnum.VertexShader, vertsource);
-        uint fragmentshader = CompileShader(GLEnum.FragmentShader, fragsource);
+        // compile
+        uint vertshader = CompileShader(ShaderType.VertexShader, vertsource);
+        uint fragshader = CompileShader(ShaderType.FragmentShader, fragsource);
 
-        // combine into shader program
+        // combine
         handle = opengl.CreateProgram();
-        opengl.AttachShader(handle, vertexshader);
-        opengl.AttachShader(handle, fragmentshader);
+        opengl.AttachShader(handle, vertshader);
+        opengl.AttachShader(handle, fragshader);
         opengl.LinkProgram(handle);
 
-        // deal with errors
+        // errors
         opengl.GetProgram(handle, GLEnum.LinkStatus, out int status);
-        if (status == 0) throw new Exception(opengl.GetProgramInfoLog(handle));
+        var log = opengl.GetProgramInfoLog(handle);
+        if (status == 0) throw new Exception(log);
 
-        // delete vert and frag
-        opengl.DeleteShader(vertexshader);
-        opengl.DeleteShader(fragmentshader);
+        // cleanup
+        opengl.DeleteShader(vertshader);
+        opengl.DeleteShader(fragshader);
     }
 
-    private uint CompileShader(GLEnum type, string source)
+    private uint CompileShader(ShaderType type, string source)
     {
         uint shader = opengl.CreateShader(type);
         opengl.ShaderSource(shader, source);
         opengl.CompileShader(shader);
         
         opengl.GetShader(shader, GLEnum.CompileStatus, out int status);
-        if (status == 0) throw new Exception(opengl.GetShaderInfoLog(shader));
+        var log = opengl.GetShaderInfoLog(shader);
+        if (status == 0) throw new Exception(log);
 
         return shader;
     }
@@ -54,31 +56,31 @@ public class Shader
         opengl.UseProgram(handle);
     }
 
-    public void SetUniform(string name, float value)
+    public void SetUniform1(string name, float value)
     {
         int location = opengl.GetUniformLocation(handle, name);
         opengl.Uniform1(location, value);
     }
 
-    public void SetUniform(string name, Vector2 value)
+    public void SetUniform2(string name, Vector2 value)
     {
         int location = opengl.GetUniformLocation(handle, name);
         opengl.Uniform2(location, value.X, value.Y);
     }
 
-    public void SetUniform(string name, Vector3 value)
+    public void SetUniform3(string name, Vector3 value)
     {
         int location = opengl.GetUniformLocation(handle, name);
         opengl.Uniform3(location, value.X, value.Y, value.Z);
     }
 
-    public void SetUniform(string name, Vector4 value)
+    public void SetUniform4(string name, Vector4 value)
     {
         int location = opengl.GetUniformLocation(handle, name);
         opengl.Uniform4(location, value.X, value.Y, value.Z, value.W);
     }
 
-    public unsafe void SetUniformMatrix(string name, Matrix4x4 matrix)
+    public unsafe void SetUniformMatrix4(string name, Matrix4x4 matrix)
     {
         int location = opengl.GetUniformLocation(handle, name);
 
@@ -91,5 +93,11 @@ public class Shader
         ];
 
         fixed (float* ptr = &converted[0]) opengl.UniformMatrix4(location, 1, false, ptr);
+    }
+
+    public unsafe void SetUniformTexture(string name, int unit)
+    {
+        opengl.ActiveTexture(TextureUnit.Texture0 + unit);
+        opengl.Uniform1(opengl.GetUniformLocation(handle, name), unit);
     }
 }

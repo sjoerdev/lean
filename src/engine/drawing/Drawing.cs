@@ -257,28 +257,13 @@ public static class Drawing
 
     public static void DrawSprite(Sprite sprite, Vector2 position)
     {
-        // bind
+        // use and bind
         sprite.shader.Use();
         sprite.texture.Bind();
 
         // uniforms
-        sprite.shader.Use();
-        sprite.shader.SetUniform("resolution", Windowing.Resolution);
-        sprite.shader.SetUniform("position", position);
-        sprite.shader.SetUniform("tex", 0);
+        sprite.shader.SetUniformTexture("tex", 0);
 
-        // setup a vao
-
-        // vertex attributes (vpositions and vtexcoords)
-        opengl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
-        opengl.EnableVertexAttribArray(0);
-        opengl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 2 * sizeof(float));
-        opengl.EnableVertexAttribArray(1);
-
-        // Disable vertex attributes and unbind
-        opengl.DisableVertexAttribArray(1);
-        opengl.DisableVertexAttribArray(0);
-        opengl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-        opengl.BindTexture(TextureTarget.Texture2D, 0);
+        // setup a vao and setup vertex attributes
     }
 }

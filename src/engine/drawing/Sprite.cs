@@ -1,4 +1,3 @@
-using Silk.NET.Windowing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -12,13 +11,9 @@ public class Sprite
 
     public Sprite(string path)
     {
-        // load using imagesharp
+        // load image data using imagesharp
         using var image = Image.Load<Rgba32>(path);
-
-        // flip for opengl
         image.Mutate(x => x.Flip(FlipMode.Vertical));
-
-        // get pixel data into byte array
         var data = new byte[4 * image.Width * image.Height];
         image.CopyPixelDataTo(data);
 
@@ -26,6 +21,6 @@ public class Sprite
         texture = new Texture(data, image.Width, image.Height);
 
         // generate shader
-        shader = new Shader("res/glsl/spritevert.glsl", "res/glsl/spritefrag.glsl");
+        shader = new Shader("res/glsl/sprite-vert.glsl", "res/glsl/sprite-frag.glsl");
     }
 }
