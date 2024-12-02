@@ -8,5 +8,5 @@ out vec2 uv;
 void main()
 {
     uv = a_uv;
-    gl_Position = vec3(a_pos, 0);
+    gl_Position = vec4(a_pos, 0, 1);
 }

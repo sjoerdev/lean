@@ -244,6 +244,7 @@ public static class Drawing
 
     private unsafe static void DrawPrimitive(float[] vertices, int vertexCount, PrimitiveType primitiveType)
     {
+        opengl.UseProgram(program);
         opengl.BindVertexArray(vao);
         opengl.BindBuffer(GLEnum.ArrayBuffer, vbo);
         fixed (void* ptr = &vertices[0]) opengl.BufferData(GLEnum.ArrayBuffer, (uint)(vertices.Length * sizeof(float)), ptr, GLEnum.StaticDraw);
@@ -255,7 +256,7 @@ public static class Drawing
         opengl.BindVertexArray(0);
     }
 
-    public static void DrawSprite(Sprite sprite, Vector2 position)
+    public static unsafe void DrawSprite(Sprite sprite, Vector2 position)
     {
         // use and bind
         sprite.shader.Use();
@@ -264,6 +265,50 @@ public static class Drawing
         // uniforms
         sprite.shader.SetUniformTexture("tex", 0);
 
-        // setup a vao and setup vertex attributes
+        // setup the quad
+        Vector2 spritesize = new Vector2(sprite.texture.width, sprite.texture.height);
+        Vector2 sprite_udc_mincorner = position / Windowing.Resolution;
+        Vector2 sprite_udc_maxcorner = (position + spritesize) / Windowing.Resolution;
+
+        float[] vertices =
+        [
+            sprite_udc_mincorner.X, sprite_udc_mincorner.Y, 0, 0,  // bl
+            sprite_udc_maxcorner.X, sprite_udc_mincorner.Y, 1, 0,  // br
+            sprite_udc_maxcorner.X, sprite_udc_maxcorner.Y, 1, 1,  // tr
+            sprite_udc_mincorner.X, sprite_udc_maxcorner.Y, 0, 1   // tl
+        ];
+
+        uint[] indices =
+        [
+            0, 1, 2, // first
+            2, 3, 0  // second
+        ];
+
+        // vao and vbo
+        var temp_vao = opengl.GenVertexArray();
+        var temp_vbo = opengl.GenBuffer();
+        opengl.BindVertexArray(temp_vao);
+        opengl.BindBuffer(GLEnum.ArrayBuffer, temp_vbo);
+        fixed (void* ptr = &vertices[0]) opengl.BufferData(GLEnum.ArrayBuffer, (uint)(vertices.Length * sizeof(float)), ptr, GLEnum.StaticDraw);
+
+        // vertex attributes (a_pos and a_uv)
+        opengl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0); // mis 2 in plaats van 4
+        opengl.EnableVertexAttribArray(0);
+        opengl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 2 * sizeof(float));
+        opengl.EnableVertexAttribArray(1);
+
+        // ebo
+        uint temp_ebo = opengl.GenBuffer();
+        opengl.BindBuffer(BufferTargetARB.ElementArrayBuffer, temp_ebo);
+        fixed (void* ptr = &indices[0]) opengl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint)(indices.Length * sizeof(uint)), ptr, BufferUsageARB.StaticDraw);
+
+        // draw
+        opengl.DrawElements(PrimitiveType.Triangles, (uint)indices.Length, DrawElementsType.UnsignedInt, null);
+
+        // cleanup
+        opengl.BindTexture(TextureTarget.Texture2D, 0);
+        opengl.BindBuffer(GLEnum.ArrayBuffer, 0);
+        opengl.BindVertexArray(0);
+        opengl.UseProgram(0);
     }
 }
