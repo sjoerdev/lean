@@ -9,101 +9,35 @@ namespace Lean;
 public static class Drawing
 {
     private static GL opengl;
-    private static uint program;
-    private static uint vao;
-    private static uint vbo;
-
     public static GL GetOpenGL() => opengl;
+
+    static Shader primitiveShader;
+    private static uint primitive_vao;
+    private static uint primitive_vbo;
 
     public static void Initialize(IWindow window)
     {
         opengl = GL.GetApi(window);
         opengl.Enable(GLEnum.Blend);
         opengl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-        program = CreateShaderProgram();
-        vao = opengl.GenVertexArray();
-        vbo = opengl.GenBuffer();
-        SetProjectionMatrix(window.Size.X, window.Size.Y);
+
+        primitiveShader = new Shader("res/glsl/prim-vert.glsl", "res/glsl/prim-frag.glsl");
+        UpdatePrimitiveProjection(window.Size.X, window.Size.Y);
+        primitive_vao = opengl.GenVertexArray();
+        primitive_vbo = opengl.GenBuffer();
     }
 
-    private static uint CreateShaderProgram()
+    public static void UpdatePrimitiveProjection(int width, int height)
     {
-        string vertSource = 
-        @"
-            #version 330 core
-
-            layout(location = 0) in vec2 aPos;
-
-            uniform mat4 projection;
-
-            void main()
-            {
-                gl_Position = projection * vec4(aPos, 0.0, 1.0);
-            }
-        ";
-
-        string fragSource = 
-        @"
-            #version 330 core
-
-            uniform vec4 color;
-
-            out vec4 FragColor;
-
-            void main()
-            {
-                FragColor = color;
-            }
-        ";
-
-        uint vertShader = CreateShader(vertSource, ShaderType.VertexShader);
-        uint fragShader = CreateShader(fragSource, ShaderType.FragmentShader);
-
-        uint shaderProgram = opengl.CreateProgram();
-        opengl.AttachShader(shaderProgram, vertShader);
-        opengl.AttachShader(shaderProgram, fragShader);
-        opengl.LinkProgram(shaderProgram);
-        opengl.DeleteShader(vertShader);
-        opengl.DeleteShader(fragShader);
-
-        return shaderProgram;
-    }
-
-    private static uint CreateShader(string source, ShaderType type)
-    {
-        uint shader = opengl.CreateShader(type);
-        opengl.ShaderSource(shader, source);
-        opengl.CompileShader(shader);
-        return shader;
-    }
-
-    public static void SetProjectionMatrix(int width, int height)
-    {
-        opengl.UseProgram(program);
+        primitiveShader.Use();
         var projectionMatrix = Matrix4x4.CreateOrthographic(width, height, -1, 1);
+        primitiveShader.SetUniformMatrix4("projection", projectionMatrix);
+    }
 
-        // convert the matrix to a float array in colum major order
-        float[] projectionArray =
-        [
-            projectionMatrix.M11,
-            projectionMatrix.M21,
-            projectionMatrix.M31,
-            projectionMatrix.M41,
-            projectionMatrix.M12,
-            projectionMatrix.M22,
-            projectionMatrix.M32,
-            projectionMatrix.M42,
-            projectionMatrix.M13,
-            projectionMatrix.M23,
-            projectionMatrix.M33,
-            projectionMatrix.M43,
-            projectionMatrix.M14,
-            projectionMatrix.M24,
-            projectionMatrix.M34,
-            projectionMatrix.M44,
-        ];
-
-        opengl.UniformMatrix4(opengl.GetUniformLocation(program, "projection"), 1, false, ref projectionArray[0]);
+    public static void ResizeViewport(Size size)
+    {
+        UpdatePrimitiveProjection(size.Width, size.Height);
+        opengl.Viewport(size);
     }
     
     public static void ClearWindow()
@@ -111,20 +45,15 @@ public static class Drawing
         opengl.ClearColor(currentColor.R / 255f, currentColor.G / 255f, currentColor.B / 255f, currentColor.A / 255f);
         opengl.Clear(ClearBufferMask.ColorBufferBit);
     }
-    public static void ResizeViewport(Size size)
-    {
-        SetProjectionMatrix(size.Width, size.Height);
-        opengl.Viewport(size);
-    }
 
     private static Color currentColor = Color.Blue;
+    public static Color GetColor() => currentColor;
     public static void SetColor(Color color)
     {
         currentColor = color;
-        opengl.UseProgram(program);
-        opengl.Uniform4(opengl.GetUniformLocation(program, "color"), color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
+        primitiveShader.Use();
+        primitiveShader.SetUniform4("col", new Vector4(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f));
     }
-    public static Color GetColor() => currentColor;
     
     // basic shapes (positions are in pixel coordinates)
     public static void DrawLine(Vector2 start, Vector2 end, int width)
@@ -244,9 +173,9 @@ public static class Drawing
 
     private unsafe static void DrawPrimitive(float[] vertices, int vertexCount, PrimitiveType primitiveType)
     {
-        opengl.UseProgram(program);
-        opengl.BindVertexArray(vao);
-        opengl.BindBuffer(GLEnum.ArrayBuffer, vbo);
+        primitiveShader.Use();
+        opengl.BindVertexArray(primitive_vao);
+        opengl.BindBuffer(GLEnum.ArrayBuffer, primitive_vbo);
         fixed (void* ptr = &vertices[0]) opengl.BufferData(GLEnum.ArrayBuffer, (uint)(vertices.Length * sizeof(float)), ptr, GLEnum.StaticDraw);
         opengl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
         opengl.EnableVertexAttribArray(0);

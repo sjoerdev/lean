@@ -39,5 +39,9 @@ public static class Game
         // draw a white circle at the mouse position
         Drawing.SetColor(Color.Black);
         Drawing.DrawCircleFilled(Input.GetMousePosition(), 8);
+
+        // draw test rectangle
+        Drawing.SetColor(Color.Orange);
+        Drawing.DrawRectangleFilled(new(100, 100), new(100, 100));
     }
 }
