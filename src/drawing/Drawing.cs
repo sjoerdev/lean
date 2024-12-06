@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Drawing;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
+using System.Linq;
 
 namespace Lean;
 
@@ -169,6 +170,29 @@ public static class Drawing
     public static void DrawTriangleFilled(Vector2 point1, Vector2 point2, Vector2 point3)
     {
         DrawPrimitive([point1.X, point1.Y, point2.X, point2.Y, point3.X, point3.Y], 3, PrimitiveType.Triangles);
+    }
+
+    public static void DrawThickLine(Vector2 start, Vector2 end, float thickness)
+    {
+        Vector2 direction = Vector2.Normalize(end - start);
+        Vector2 perp = new Vector2(-direction.Y, direction.X) * (thickness / 2);
+        
+        Vector2 v1 = start + perp; // tl
+        Vector2 v2 = start - perp; // bl
+        Vector2 v3 = end + perp;   // tr
+        Vector2 v4 = end - perp;   // br
+
+        float[] vertices =
+        [
+            v1.X, v1.Y,
+            v2.X, v2.Y,
+            v3.X, v3.Y,
+            v3.X, v3.Y,
+            v2.X, v2.Y,
+            v4.X, v4.Y
+        ];
+
+        DrawPrimitive(vertices, 6, PrimitiveType.Triangles);
     }
 
     private unsafe static void DrawPrimitive(float[] vertices, int vertexCount, PrimitiveType primitiveType)

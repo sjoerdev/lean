@@ -43,5 +43,9 @@ public static class Game
         // draw test rectangle
         Drawing.SetColor(Color.Orange);
         Drawing.DrawRectangleFilled(new(100, 100), new(100, 100));
+
+        // draw test thick line
+        Drawing.SetColor(Color.Brown);
+        Drawing.DrawThickLine(new(100, 100), Input.GetMousePosition(), 8);
     }
 }
