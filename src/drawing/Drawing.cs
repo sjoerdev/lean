@@ -64,16 +64,18 @@ public static class Drawing
 
     public static void DrawRectangle(Vector2 position, Vector2 size)
     {
+        Vector2 half = size / 2;
+        
         float[] vertices =
         [
-            position.X, position.Y,
-            position.X + size.X, position.Y,
-            position.X + size.X, position.Y,
-            position.X + size.X, position.Y + size.Y,
-            position.X + size.X, position.Y + size.Y,
-            position.X, position.Y + size.Y,
-            position.X, position.Y + size.Y,
-            position.X, position.Y
+            position.X - half.X, position.Y - half.Y,
+            position.X + half.X, position.Y - half.Y,
+            position.X + half.X, position.Y - half.Y,
+            position.X + half.X, position.Y + half.Y,
+            position.X + half.X, position.Y + half.Y,
+            position.X - half.X, position.Y + half.Y,
+            position.X - half.X, position.Y + half.Y,
+            position.X - half.X, position.Y - half.Y
         ];
 
         DrawPrimitive(vertices, 8, PrimitiveType.Lines);
@@ -81,14 +83,16 @@ public static class Drawing
 
     public static void DrawRectangleFilled(Vector2 position, Vector2 size)
     {
+        Vector2 half = size / 2;
+
         float[] vertices =
         [
-            position.X, position.Y,
-            position.X + size.X, position.Y,
-            position.X, position.Y + size.Y,
-            position.X + size.X, position.Y,
-            position.X + size.X, position.Y + size.Y,
-            position.X, position.Y + size.Y
+            position.X - half.X, position.Y - half.Y,
+            position.X + half.X, position.Y - half.Y,
+            position.X - half.X, position.Y + half.Y,
+            position.X + half.X, position.Y - half.Y,
+            position.X + half.X, position.Y + half.Y,
+            position.X - half.X, position.Y + half.Y
         ];
 
         DrawPrimitive(vertices, 6, PrimitiveType.Triangles);
