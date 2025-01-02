@@ -32,7 +32,7 @@ public unsafe class AudioClipWav
 
         // read wav header
         byte[] header = new byte[44];
-        stream.Read(header, 0, 44);
+        stream.ReadExactly(header, 0, 44);
         sampleRate = BitConverter.ToInt32(header, 24);
         stereo = BitConverter.ToInt16(header, 22) > 1;
         bitsPerSample = BitConverter.ToInt16(header, 34);
@@ -111,7 +111,7 @@ public unsafe class AudioClipWav
         {
             // read chunk name and size
             byte[] buffer = new byte[8];
-            tempStream.Read(buffer, 0, 8);
+            tempStream.ReadExactly(buffer, 0, 8);
             string chunkName = System.Text.Encoding.ASCII.GetString(buffer, 0, 4);
             int chunkSize = BitConverter.ToInt32(buffer, 4);
 
