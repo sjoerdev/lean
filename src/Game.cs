@@ -33,19 +33,12 @@ public static class Game
         Drawing.SetColor(Color.LightGray);
         Drawing.ClearWindow();
 
-        // draw sprite
-        Drawing.DrawSprite(sprite, Vector2.Zero, 8);
-
-        // draw a white circle at the mouse position
-        Drawing.SetColor(Color.Black);
-        Drawing.DrawCircleFilled(Input.GetMousePosition(), 8);
-
         // draw test rectangle
         Drawing.SetColor(Color.Orange);
         Drawing.DrawRectangleFilled(new(100, 100), new(100, 100));
 
         // draw test thick line
         Drawing.SetColor(Color.Brown);
-        Drawing.DrawThickLine(new(100, 100), Input.GetMousePosition(), 8);
+        Drawing.DrawLine(new(100, 100), Input.GetMousePosition());
     }
 }

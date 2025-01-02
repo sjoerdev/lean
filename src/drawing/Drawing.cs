@@ -12,9 +12,9 @@ public static class Drawing
     private static GL opengl;
     public static GL GetOpenGL() => opengl;
 
-    static Shader primitiveShader;
-    private static uint primitive_vao;
-    private static uint primitive_vbo;
+    private static Shader prim_shader;
+    private static uint prim_vao;
+    private static uint prim_vbo;
 
     public static void Initialize(IWindow window)
     {
@@ -22,17 +22,16 @@ public static class Drawing
         opengl.Enable(GLEnum.Blend);
         opengl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-        primitiveShader = new Shader("res/glsl/prim-vert.glsl", "res/glsl/prim-frag.glsl");
+        prim_shader = new Shader("res/glsl/prim-vert.glsl", "res/glsl/prim-frag.glsl");
         UpdatePrimitiveProjection(window.Size.X, window.Size.Y);
-        primitive_vao = opengl.GenVertexArray();
-        primitive_vbo = opengl.GenBuffer();
+        prim_vao = opengl.GenVertexArray();
+        prim_vbo = opengl.GenBuffer();
     }
 
     public static void UpdatePrimitiveProjection(int width, int height)
     {
-        primitiveShader.Use();
-        var projectionMatrix = Matrix4x4.CreateOrthographic(width, height, -1, 1);
-        primitiveShader.SetUniformMatrix4("projection", projectionMatrix);
+        prim_shader.Use();
+        prim_shader.SetUniformMatrix4("projection", Matrix4x4.CreateOrthographic(width, height, -1, 1));
     }
 
     public static void ResizeViewport(Size size)
@@ -52,12 +51,12 @@ public static class Drawing
     public static void SetColor(Color color)
     {
         currentColor = color;
-        primitiveShader.Use();
-        primitiveShader.SetUniform4("col", new Vector4(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f));
+        prim_shader.Use();
+        prim_shader.SetUniform4("col", new Vector4(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f));
     }
     
     // basic shapes (positions are in pixel coordinates)
-    public static void DrawLine(Vector2 start, Vector2 end, int width)
+    public static void DrawLine(Vector2 start, Vector2 end)
     {
         DrawPrimitive([start.X, start.Y, end.X, end.Y], 2, PrimitiveType.Lines);
     }
@@ -201,9 +200,9 @@ public static class Drawing
 
     private unsafe static void DrawPrimitive(float[] vertices, int vertexCount, PrimitiveType primitiveType)
     {
-        primitiveShader.Use();
-        opengl.BindVertexArray(primitive_vao);
-        opengl.BindBuffer(GLEnum.ArrayBuffer, primitive_vbo);
+        prim_shader.Use();
+        opengl.BindVertexArray(prim_vao);
+        opengl.BindBuffer(GLEnum.ArrayBuffer, prim_vbo);
         fixed (void* ptr = &vertices[0]) opengl.BufferData(GLEnum.ArrayBuffer, (uint)(vertices.Length * sizeof(float)), ptr, GLEnum.StaticDraw);
         opengl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
         opengl.EnableVertexAttribArray(0);
